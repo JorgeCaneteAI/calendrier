@@ -821,7 +821,7 @@ th.sortable:hover .sort-icon { opacity: 1; }
   /* Calendrier : cellules qui remplissent l'écran */
   .calendar-wrapper { padding: 0 6px 4px; }
   .day-cell {
-    height: calc((100dvh - 160px) / var(--num-weeks, 6));
+    height: calc((100dvh - 148px) / var(--num-weeks, 6));
     min-height: 55px;
     padding: 3px 2px 2px;
     overflow: hidden;
