@@ -150,17 +150,27 @@
       <a href="{{ url_for('index') }}" class="btn btn-cancel">Annuler</a>
       {% if id %}
       <button type="button" class="btn btn-danger"
-              onclick="document.getElementById('form-supprimer').requestSubmit()">🗑 Supprimer</button>
+              onclick="confirmerSuppression()">🗑 Supprimer</button>
       {% endif %}
     </div>
 
   </form>
 
   {% if id %}
-  <form id="form-supprimer" method="POST" action="{{ url_for('supprimer', id=id) }}"
-        onsubmit="return confirm('Supprimer cette réservation ?')">
+  <form id="form-supprimer" method="POST" action="{{ url_for('supprimer', id=id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   </form>
+  <script>
+  function confirmerSuppression() {
+    const nom = "{{ resa.nom_client if resa else '' }}";
+    const arrivee = "{{ resa.arrivee if resa else '' }}";
+    const depart = "{{ resa.depart if resa else '' }}";
+    const msg = `Voulez-vous vraiment supprimer la réservation :\n\n${nom}\ndu ${arrivee} au ${depart} ?\n\nCette action est irréversible.`;
+    if (confirm(msg)) {
+      document.getElementById('form-supprimer').submit();
+    }
+  }
+  </script>
   {% endif %}
 </div>
 {% endblock %}
