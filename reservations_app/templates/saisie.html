@@ -150,7 +150,10 @@
       <a href="{{ url_for('index') }}" class="btn btn-cancel">Annuler</a>
       {% if id %}
       <button type="submit" form="form-supprimer" class="btn btn-danger"
-              onclick="return confirm('Voulez-vous vraiment annuler cette réservation ?\n\n{{ resa.nom_client if resa else '' }}\ndu {{ resa.arrivee if resa else '' }} au {{ resa.depart if resa else '' }}\n\nCette action est irréversible.')">
+              data-nom="{{ resa.nom_client if resa else '' }}"
+              data-arrivee="{{ resa.arrivee if resa else '' }}"
+              data-depart="{{ resa.depart if resa else '' }}"
+              onclick="return confirm('Voulez-vous vraiment annuler cette réservation ?\n\n' + this.dataset.nom + '\ndu ' + this.dataset.arrivee + ' au ' + this.dataset.depart + '\n\nCette action est irréversible.')">
         🗑 Annuler cette réservation
       </button>
       {% endif %}
