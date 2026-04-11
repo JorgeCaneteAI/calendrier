@@ -149,15 +149,19 @@
       <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
       <a href="{{ url_for('index') }}" class="btn btn-cancel">Annuler</a>
       {% if id %}
-      <form method="POST" action="{{ url_for('supprimer', id=id) }}" style="display:inline;"
-            onsubmit="return confirm('Supprimer cette réservation ?')">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-danger">🗑 Supprimer</button>
-      </form>
+      <button type="button" class="btn btn-danger"
+              onclick="document.getElementById('form-supprimer').requestSubmit()">🗑 Supprimer</button>
       {% endif %}
     </div>
 
   </form>
+
+  {% if id %}
+  <form id="form-supprimer" method="POST" action="{{ url_for('supprimer', id=id) }}"
+        onsubmit="return confirm('Supprimer cette réservation ?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
+  {% endif %}
 </div>
 {% endblock %}
 
