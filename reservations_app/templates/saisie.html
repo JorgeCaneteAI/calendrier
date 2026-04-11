@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}{% if id %}Modifier{% else %}Nouvelle{% endif %} réservation{% endblock %}
+{% block page_title %}{% if id %}Modifier la réservation{% else %}Nouvelle réservation{% endif %}{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <form method="POST" id="resa-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-code-preview">
+      Code généré : <strong id="code-preview">—</strong>
+    </div>
+
+    <h3 class="form-section-title">Informations principales</h3>
+    <div class="form-grid">
+
+      <div class="form-group full-width">
+        <label for="nom_client">Nom client *</label>
+        <input type="text" id="nom_client" name="nom_client" required
+               value="{{ resa.nom_client if resa else '' }}"
+               placeholder="ex : DUPONT - PARIS" style="text-transform:uppercase;">
+      </div>
+
+      <div class="form-group">
+        <label for="propriete">Propriété *</label>
+        <select id="propriete" name="propriete" required>
+          <option value="">— Choisir —</option>
+          {% for val, label in [('VP-BB','VP-BB · Chambres d\'hôtes'), ('VP-ETE','VP-ETE · Maison entière'), ('AV-ANN','AV-ANN · Studio Avignon')] %}
+          <option value="{{ val }}" {% if resa and resa.propriete == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="source">Source *</label>
+        <select id="source" name="source" required>
+          <option value="">— Choisir —</option>
+          {% for s in ['Airbnb','Booking','Direct','Privée','Absence'] %}
+          <option value="{{ s }}" {% if resa and resa.source == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="arrivee">Date d'arrivée *</label>
+        <input type="date" id="arrivee" name="arrivee" required
+               value="{{ resa.arrivee if resa else '' }}">
+      </div>
+
+      <div class="form-group">
+        <label for="depart">Date de départ *</label>
+        <input type="date" id="depart" name="depart" required
+               value="{{ resa.depart if resa else '' }}">
+      </div>
+
+      <div class="form-group">
+        <label>Durée</label>
+        <div id="duree-display" class="duree-display">— nuits</div>
+      </div>
+
+      <div class="form-group">
+        <label for="statut">Statut *</label>
+        <select id="statut" name="statut" required>
+          {% for s in ['Confirmée','En attente','Annulée'] %}
+          <option value="{{ s }}" {% if resa and resa.statut == s %}selected{% elif not resa and s == 'Confirmée' %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+    </div>
+
+    <h3 class="form-section-title">Composition du groupe</h3>
+    <div class="form-grid form-grid-5">
+
+      <div class="form-group">
+        <label for="adultes">Adultes *</label>
+        <input type="number" id="adultes" name="adultes" min="0" max="18"
+               value="{{ resa.adultes if resa else 1 }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="enfants">Enfants</label>
+        <input type="number" id="enfants" name="enfants" min="0" max="18"
+               value="{{ resa.enfants if resa else 0 }}">
+      </div>
+
+      <div class="form-group">
+        <label for="bebes">Bébés</label>
+        <input type="number" id="bebes" name="bebes" min="0" max="18"
+               value="{{ resa.bebes if resa else 0 }}">
+      </div>
+
+      <div class="form-group">
+        <label for="animaux">Animaux</label>
+        <input type="number" id="animaux" name="animaux" min="0" max="18"
+               value="{{ resa.animaux if resa else 0 }}">
+      </div>
+
+      <div class="form-group">
+        <label for="animaux_details">Précisions animaux</label>
+        <input type="text" id="animaux_details" name="animaux_details"
+               value="{{ resa.animaux_details if resa else '' }}"
+               placeholder="ex : 1 chien, 1 chat">
+      </div>
+
+    </div>
+
+    <h3 class="form-section-title">Informations complémentaires</h3>
+    <div class="form-grid">
+
+      <div class="form-group">
+        <label for="provenance">Provenance géographique</label>
+        <input type="text" id="provenance" name="provenance"
+               value="{{ resa.provenance if resa else '' }}"
+               placeholder="ex : Paris · France">
+      </div>
+
+      <div class="form-group">
+        <label for="numero_resa">N° réservation plateforme</label>
+        <input type="text" id="numero_resa" name="numero_resa"
+               value="{{ resa.numero_resa if resa else '' }}">
+      </div>
+
+      <div class="form-group">
+        <label for="montant">Montant encaissé (€)</label>
+        <input type="number" id="montant" name="montant" min="0" step="0.01"
+               value="{{ resa.montant if resa and resa.montant else '' }}">
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="prive" name="prive"
+                 {% if resa and resa.prive %}checked{% endif %}>
+          Réservation privée
+        </label>
+      </div>
+
+      <div class="form-group full-width">
+        <label for="commentaire">Commentaire</label>
+        <textarea id="commentaire" name="commentaire" rows="3"
+                  placeholder="Notes libres…">{{ resa.commentaire if resa else '' }}</textarea>
+      </div>
+
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">💾 Enregistrer</button>
+      <a href="{{ url_for('index') }}" class="btn btn-cancel">Annuler</a>
+      {% if id %}
+      <form method="POST" action="{{ url_for('supprimer', id=id) }}" style="display:inline;"
+            onsubmit="return confirm('Supprimer cette réservation ?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger">🗑 Supprimer</button>
+      </form>
+      {% endif %}
+    </div>
+
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CODE_COLORS = {
+  'Airbnb':  '#D85A30', 'Booking': '#378ADD',
+  'Direct':  '#639922', 'Privée':  '#888780', 'Absence': '#2C2C2A',
+};
+
+function updateCode() {
+  const adultes  = document.getElementById('adultes').value || 0;
+  const enfants  = document.getElementById('enfants').value || 0;
+  const bebes    = document.getElementById('bebes').value || 0;
+  const animaux  = document.getElementById('animaux').value || 0;
+  const propriete = document.getElementById('propriete').value;
+  if (!propriete) { document.getElementById('code-preview').textContent = '—'; return; }
+  fetch(`/api/code?adultes=${adultes}&enfants=${enfants}&bebes=${bebes}&animaux=${animaux}&propriete=${propriete}`)
+    .then(r => r.json()).then(d => { document.getElementById('code-preview').textContent = d.code; });
+}
+
+function updateDuree() {
+  const arr = document.getElementById('arrivee').value;
+  const dep = document.getElementById('depart').value;
+  if (arr && dep) {
+    const nuits = Math.round((new Date(dep) - new Date(arr)) / 86400000);
+    document.getElementById('duree-display').textContent = nuits > 0 ? `${nuits} nuit${nuits > 1 ? 's' : ''}` : '—';
+  }
+}
+
+function updateSourceColor() {
+  const source = document.getElementById('source').value;
+  document.getElementById('code-preview').parentElement.style.borderLeftColor = CODE_COLORS[source] || '#ccc';
+}
+
+['adultes','enfants','bebes','animaux','propriete'].forEach(id => {
+  document.getElementById(id).addEventListener('change', updateCode);
+  document.getElementById(id).addEventListener('input', updateCode);
+});
+document.getElementById('arrivee').addEventListener('change', updateDuree);
+document.getElementById('depart').addEventListener('change', updateDuree);
+document.getElementById('source').addEventListener('change', updateSourceColor);
+updateCode(); updateDuree(); updateSourceColor();
+</script>
+{% endblock %}

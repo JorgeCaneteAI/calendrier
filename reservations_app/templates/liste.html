@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Liste des réservations{% endblock %}
+{% block page_title %}Liste des réservations{% endblock %}
+{% block page_subtitle %}{{ reservations|length }} réservation(s){% endblock %}
+
+{% block content %}
+<div class="filters-bar">
+  <form method="GET" class="filters-form" id="filters-form">
+    <input type="text" name="search" value="{{ search }}" placeholder="🔍 Rechercher un client…" id="search-input" class="filter-input">
+    <select name="propriete" class="filter-select" onchange="this.form.submit()">
+      <option value="">Toutes propriétés</option>
+      {% for val, label in [('VP-BB','VP-BB'), ('VP-ETE','VP-ETE'), ('AV-ANN','AV-ANN')] %}
+      <option value="{{ val }}" {% if propriete == val %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="source" class="filter-select" onchange="this.form.submit()">
+      <option value="">Toutes sources</option>
+      {% for s in ['Airbnb','Booking','Direct','Privée','Absence'] %}
+      <option value="{{ s }}" {% if source == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <select name="statut" class="filter-select" onchange="this.form.submit()">
+      <option value="">Tous statuts</option>
+      {% for s in ['Confirmée','En attente','Annulée'] %}
+      <option value="{{ s }}" {% if statut == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <input type="month" name="mois" value="{{ mois }}" class="filter-input" onchange="this.form.submit()">
+    {% if search or propriete or source or statut or mois %}
+    <a href="{{ url_for('liste') }}" class="btn btn-cancel">✕ Réinitialiser</a>
+    {% endif %}
+  </form>
+</div>
+
+<div class="table-wrapper">
+  {% if reservations %}
+  <table class="resa-table" id="resa-table">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th class="sortable" data-col="nom">Nom client <span class="sort-icon">⇅</span></th>
+        <th>N° résa</th>
+        <th class="sortable" data-col="propriete">Propriété <span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-col="source">Source <span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-col="arrivee">Arrivée <span class="sort-icon">⇅</span></th>
+        <th>Départ</th>
+        <th>Nuits</th>
+        <th class="center">Adultes</th>
+        <th class="center">Enfants</th>
+        <th class="center">Bébés</th>
+        <th class="center">Animaux</th>
+        <th>Ville</th>
+        <th>Pays</th>
+        <th>Statut</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      {% for r in reservations %}
+      {% set prov_parts = r.provenance.split(' · ') if r.provenance else [] %}
+      {% set prov_ville = prov_parts[0] if prov_parts|length > 0 else '' %}
+      {% set prov_pays  = prov_parts[1] if prov_parts|length > 1 else '' %}
+      <tr class="resa-row"
+          data-id="{{ r.id }}"
+          data-nom="{{ r.nom_client|lower }}"
+          data-propriete="{{ r.propriete }}"
+          data-source="{{ r.source }}"
+          data-arrivee="{{ r.arrivee }}">
+        <td class="td-code"><code class="code-badge" id="code-{{ r.id }}">{{ r.code }}</code></td>
+        <td class="td-nom nom-cell">
+          <span id="nom-{{ r.id }}">{{ r.nom_client }}</span>
+          {% if r.commentaire %}<div class="sub-info comment">{{ r.commentaire }}</div>{% endif %}
+        </td>
+        <td class="td-numero numero-cell">
+          {% if r.numero_resa %}<code class="numero-badge">{{ r.numero_resa }}</code>
+          {% else %}<span class="sub-info">—</span>{% endif %}
+        </td>
+        <td class="td-propriete"><span class="prop-badge prop-{{ r.propriete|replace('-','') }}">{{ r.propriete }}</span></td>
+        <td class="td-source">
+          <span class="source-badge" style="background:{{ couleurs[r.source].bg }};color:{{ couleurs[r.source].text }};">
+            {{ r.source }}
+          </span>
+        </td>
+        <td class="td-arrivee">{{ r.arrivee[8:10] }}/{{ r.arrivee[5:7] }}/{{ r.arrivee[0:4] }}</td>
+        <td class="td-depart">{{ r.depart[8:10] }}/{{ r.depart[5:7] }}/{{ r.depart[0:4] }}</td>
+        <td class="td-nuits center">{{ r.duree }}</td>
+        <td class="td-adultes center" id="adu-{{ r.id }}">{{ r.adultes }}</td>
+        <td class="td-enfants center" id="enf-{{ r.id }}">{{ r.enfants }}</td>
+        <td class="td-bebes center" id="beb-{{ r.id }}">{{ r.bebes }}</td>
+        <td class="td-animaux center" id="ani-{{ r.id }}">{{ r.animaux }}{% if r.animaux %} 🐾{% endif %}</td>
+        <td class="td-ville" id="ville-{{ r.id }}">{{ prov_ville }}</td>
+        <td class="td-pays" id="pays-{{ r.id }}">{{ prov_pays }}</td>
+        <td class="td-statut">
+          <span class="statut-badge statut-{{ r.statut|replace(' ','') }}">{{ r.statut }}</span>
+        </td>
+        <td class="actions-cell">
+          <button class="btn-action btn-quick" onclick="toggleQuick({{ r.id }})" title="Édition rapide">✏️</button>
+          <a href="{{ url_for('saisie', id=r.id) }}" class="btn-action btn-edit" title="Fiche complète">📋</a>
+          <form method="POST" action="{{ url_for('supprimer', id=r.id) }}" style="display:inline;"
+                onsubmit="return confirm('Supprimer « {{ r.nom_client }} » ?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-action btn-delete">🗑</button>
+          </form>
+        </td>
+      </tr>
+      <tr class="quick-edit-row" id="quick-{{ r.id }}" style="display:none;">
+        <td colspan="16">
+          <div class="quick-edit-panel">
+            <div class="quick-edit-fields">
+              <label>Nom client
+                <input type="text" id="qnom-{{ r.id }}" value="{{ r.nom_client }}" class="qinput qinput-nom" placeholder="NOM PRÉNOM">
+              </label>
+              <label>Ville
+                <input type="text" id="qville-{{ r.id }}" value="{{ prov_ville }}" class="qinput qinput-ville" placeholder="Paris">
+              </label>
+              <label>Pays
+                <input type="text" id="qpays-{{ r.id }}" value="{{ prov_pays }}" class="qinput qinput-ville" placeholder="France">
+              </label>
+              <label>Adultes
+                <input type="number" id="qadu-{{ r.id }}" value="{{ r.adultes }}" class="qinput qinput-num" min="0" max="20">
+              </label>
+              <label>Enfants
+                <input type="number" id="qenf-{{ r.id }}" value="{{ r.enfants }}" class="qinput qinput-num" min="0" max="20">
+              </label>
+              <label>Bébés
+                <input type="number" id="qbeb-{{ r.id }}" value="{{ r.bebes }}" class="qinput qinput-num" min="0" max="10">
+              </label>
+              <label>Animaux
+                <input type="number" id="qani-{{ r.id }}" value="{{ r.animaux }}" class="qinput qinput-num" min="0" max="10">
+              </label>
+            </div>
+            <div class="quick-edit-actions">
+              <button class="btn btn-primary btn-sm" onclick="saveQuick({{ r.id }})">✓ Enregistrer</button>
+              <button class="btn btn-cancel btn-sm" onclick="toggleQuick({{ r.id }})">Annuler</button>
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p>Aucune réservation trouvée.</p>
+    <a href="{{ url_for('saisie') }}" class="btn btn-primary">+ Créer la première réservation</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const searchInput = document.getElementById('search-input');
+if (searchInput) {
+  let timer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = searchInput.value.toLowerCase();
+    document.querySelectorAll('.resa-row').forEach(row => {
+      const quickRow = document.getElementById('quick-' + row.dataset.id);
+      const visible = row.dataset.nom.includes(q);
+      row.style.display = visible ? '' : 'none';
+      if (quickRow) quickRow.style.display = 'none';
+    });
+    timer = setTimeout(() => {
+      if (searchInput.value.length === 0 || searchInput.value.length > 2)
+        document.getElementById('filters-form').submit();
+    }, 600);
+  });
+}
+
+let sortCol = null, sortAsc = true;
+document.querySelectorAll('th.sortable').forEach(th => {
+  th.style.cursor = 'pointer';
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) sortAsc = !sortAsc;
+    else { sortCol = col; sortAsc = true; }
+    document.querySelectorAll('th.sortable .sort-icon').forEach(i => i.textContent = '⇅');
+    th.querySelector('.sort-icon').textContent = sortAsc ? '↑' : '↓';
+    const tbody = document.getElementById('tbody');
+    const pairs = [];
+    tbody.querySelectorAll('tr.resa-row').forEach(row => {
+      pairs.push([row, document.getElementById('quick-' + row.dataset.id)]);
+    });
+    pairs.sort((a, b) => {
+      const va = a[0].dataset[col] || '', vb = b[0].dataset[col] || '';
+      return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+    pairs.forEach(([row, quickRow]) => {
+      tbody.appendChild(row);
+      if (quickRow) tbody.appendChild(quickRow);
+    });
+  });
+});
+
+function toggleQuick(id) {
+  const row = document.getElementById('quick-' + id);
+  const isVisible = row.style.display !== 'none';
+  document.querySelectorAll('.quick-edit-row').forEach(r => r.style.display = 'none');
+  if (!isVisible) { row.style.display = ''; document.getElementById('qnom-' + id).focus(); }
+}
+
+function saveQuick(id) {
+  const nom     = document.getElementById('qnom-' + id).value.trim();
+  const ville   = document.getElementById('qville-' + id).value.trim();
+  const pays    = document.getElementById('qpays-' + id).value.trim();
+  const adultes = parseInt(document.getElementById('qadu-' + id).value) || 0;
+  const enfants = parseInt(document.getElementById('qenf-' + id).value) || 0;
+  const bebes   = parseInt(document.getElementById('qbeb-' + id).value) || 0;
+  const animaux = parseInt(document.getElementById('qani-' + id).value) || 0;
+  fetch('/api/quick_update/' + id, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+    body: JSON.stringify({ nom_client: nom, ville, pays, adultes, enfants, bebes, animaux })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.ok) return;
+    document.getElementById('nom-' + id).textContent   = data.nom_client;
+    document.getElementById('code-' + id).textContent  = data.code;
+    document.getElementById('adu-' + id).textContent   = data.adultes;
+    document.getElementById('enf-' + id).textContent   = data.enfants;
+    document.getElementById('beb-' + id).textContent   = data.bebes;
+    document.getElementById('ani-' + id).textContent   = data.animaux + (data.animaux ? ' 🐾' : '');
+    document.getElementById('ville-' + id).textContent = data.ville;
+    document.getElementById('pays-' + id).textContent  = data.pays;
+    document.querySelector('.resa-row[data-id="' + id + '"]').dataset.nom = data.nom_client.toLowerCase();
+    document.getElementById('quick-' + id).style.display = 'none';
+  });
+}
+</script>
+{% endblock %}

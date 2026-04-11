@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Calendrier Réservations{% endblock %}
+
+{% block extra_actions %}
+  <a href="{{ url_for('export_pdf', annee=year, mois=month) }}" class="btn btn-secondary">
+    <i data-lucide="download" class="btn-icon"></i> PDF
+  </a>
+  <a href="{{ url_for('print_mois', annee=year, mois=month) }}" class="btn btn-secondary" target="_blank">
+    <i data-lucide="printer" class="btn-icon"></i> Imprimer
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="calendar-nav">
+  <a href="{{ url_for('index') }}" class="nav-btn nav-today {% if year == current_year and month == current_month %}nav-today-active{% endif %}" title="Mois en cours">
+    <i data-lucide="calendar-check" class="nav-today-icon"></i>
+  </a>
+  <h2 class="month-title">{{ mois_nom }}<span class="month-year"> {{ year }}</span></h2>
+  <div class="nav-controls">
+    <a href="{{ url_for('index', year=prev_year, month=prev_month) }}" class="nav-btn nav-arrow">&#8249;</a>
+    <a href="{{ url_for('index', year=next_year, month=next_month) }}" class="nav-btn nav-arrow">&#8250;</a>
+  </div>
+</div>
+
+<div class="calendar-wrapper" style="--num-weeks: {{ num_weeks }};">
+  <table class="calendar">
+    <thead>
+      <tr>
+        <th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th>
+        <th class="weekend">Sam</th><th class="weekend">Dim</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for week in weeks %}
+      <tr>
+        {% for day in week %}
+        {% set is_current = (day.month == month) %}
+        {% set is_today = (day == today) %}
+        <td class="day-cell {% if not is_current %}other-month{% endif %} {% if is_today %}today{% endif %} {% if day.weekday() >= 5 %}weekend{% endif %}">
+          <div class="day-number">{{ day.day }}</div>
+          {% if is_current and day in resa_by_day %}
+            {% for r in resa_by_day[day] %}
+            {% set prop_short = r.propriete | replace('VP-', '') | replace('AV-', '') %}
+            {% set client_label = r.nom_client if r.nom_client and r.nom_client != r.source else '' %}
+            <div class="resa-band" style="background:{{ r.couleur.bg }};color:{{ r.couleur.text }};"
+                 onclick="window.location='{{ url_for('saisie', id=r.id) }}'"
+                 title="{{ r.nom_client }}{% if r.provenance %} — {{ r.provenance }}{% endif %}">
+              <div class="resa-line1 resa-desktop">{{ r.code }} · {{ r.nom_client }}</div>
+              <div class="resa-line1 resa-mobile">{{ prop_short }}{% if client_label %} · {{ client_label }}{% endif %}</div>
+              {% if r.provenance or r.commentaire %}
+              <div class="resa-line2 resa-desktop">
+                {% if r.provenance %}{{ r.provenance }}{% endif %}
+                {% if r.provenance and r.commentaire %} · {% endif %}
+                {% if r.commentaire %}{{ r.commentaire }}{% endif %}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          {% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+
+{% block mobile_nav_extra %}
+  <a href="{{ url_for('print_mois', annee=year, mois=month) }}" class="mobile-nav-item" target="_blank">
+    <i data-lucide="printer" class="mobile-nav-icon"></i>
+    <span class="mobile-nav-label">Imprimer</span>
+  </a>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,32 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Base de données et fichiers sensibles
+reservations_app/*.db
+reservations_app/auth.json
+reservations_app/.env
+*.env
+
+# Exports PDF générés
+reservations_app/exports/
+
+# Archives
+reservations_app/Archive.zip
+deploy.zip
+_deploy/
+
+# App macOS et fichiers InDesign
+Réservations VP.app/
+*.indd
+*.pdf
+
+# macOS
+.DS_Store
+
+# Scripts de lancement locaux
+reservations_app/lancer_app.sh
+"reservations_app/▶ Lancer Réservations.command"
+*.command

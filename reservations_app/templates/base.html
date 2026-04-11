@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Réservations VP{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<header class="header">
+  <div class="header-title">
+    <h1>{% block page_title %}Réservations{% endblock %}</h1>
+    <span class="subtitle">{% block page_subtitle %}Villa Plaisance &amp; Studio Avignon{% endblock %}</span>
+  </div>
+  <nav class="header-actions">
+    <a href="{{ url_for('saisie') }}"
+       class="btn btn-primary {% if request.endpoint == 'saisie' %}btn-active{% endif %}">
+      <i data-lucide="plus" class="btn-icon"></i> Nouvelle réservation
+    </a>
+    <form method="post" action="{{ url_for('sync') }}" style="display:inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-sync">
+        <i data-lucide="refresh-cw" class="btn-icon"></i> Sync iCal
+      </button>
+    </form>
+    <a href="{{ url_for('index') }}"
+       class="btn btn-secondary {% if request.endpoint == 'index' %}btn-active{% endif %}">
+      <i data-lucide="calendar" class="btn-icon"></i> Calendrier
+    </a>
+    <a href="{{ url_for('vue_annuelle') }}"
+       class="btn btn-secondary {% if request.endpoint == 'vue_annuelle' %}btn-active{% endif %}">
+      <i data-lucide="layout-grid" class="btn-icon"></i> Vue annuelle
+    </a>
+    <a href="{{ url_for('liste') }}"
+       class="btn btn-secondary {% if request.endpoint == 'liste' %}btn-active{% endif %}">
+      <i data-lucide="list" class="btn-icon"></i> Liste
+    </a>
+    {% block extra_actions %}{% endblock %}
+    <a href="{{ url_for('logout') }}" class="btn btn-logout">
+      <i data-lucide="log-out" class="btn-icon"></i> Déconnexion
+    </a>
+  </nav>
+</header>
+
+<!-- Barre de navigation mobile (bottom nav) -->
+<nav class="mobile-nav">
+  <a href="{{ url_for('index') }}" class="mobile-nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+    <i data-lucide="calendar" class="mobile-nav-icon"></i>
+    <span class="mobile-nav-label">Mois</span>
+  </a>
+  <a href="{{ url_for('vue_annuelle') }}" class="mobile-nav-item {% if request.endpoint == 'vue_annuelle' %}active{% endif %}">
+    <i data-lucide="layout-grid" class="mobile-nav-icon"></i>
+    <span class="mobile-nav-label">Année</span>
+  </a>
+  <a href="{{ url_for('saisie') }}" class="mobile-nav-item mobile-nav-add {% if request.endpoint == 'saisie' %}active{% endif %}">
+    <i data-lucide="plus" class="mobile-nav-icon"></i>
+    <span class="mobile-nav-label">Ajouter</span>
+  </a>
+  <a href="{{ url_for('liste') }}" class="mobile-nav-item {% if request.endpoint == 'liste' %}active{% endif %}">
+    <i data-lucide="list" class="mobile-nav-icon"></i>
+    <span class="mobile-nav-label">Liste</span>
+  </a>
+  <form method="post" action="{{ url_for('sync') }}" style="display:contents">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="mobile-nav-item mobile-nav-btn">
+      <i data-lucide="refresh-cw" class="mobile-nav-icon"></i>
+      <span class="mobile-nav-label">Sync</span>
+    </button>
+  </form>
+  {% block mobile_nav_extra %}{% endblock %}
+</nav>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash-bar">{{ messages[0] }}</div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+{% block scripts %}{% endblock %}
+<script>lucide.createIcons();</script>
+</body>
+</html>

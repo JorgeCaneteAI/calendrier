@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Réservations — {{ mois_nom }} {{ year }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      color: #1a1a1a;
+      background: #fff;
+    }
+
+    .print-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px 10px;
+      border-bottom: 2px solid #2C2C2A;
+      margin-bottom: 10px;
+    }
+    .print-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #2C2C2A;
+    }
+    .print-subtitle { font-size: 11px; color: #666; margin-top: 2px; }
+
+    .no-print {
+      background: #2C2C2A;
+      color: #fff;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .no-print button {
+      background: #639922;
+      color: #fff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 12px;
+    }
+    .no-print a {
+      color: #aaa;
+      font-size: 12px;
+      margin-left: 16px;
+      text-decoration: none;
+    }
+
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    thead th {
+      background: #2C2C2A;
+      color: #fff;
+      padding: 6px 4px;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .weekend-th { background: #3d3d3a; }
+
+    td {
+      vertical-align: top;
+      border: 1px solid #ddd;
+      padding: 4px 3px 3px;
+      height: 90px;
+    }
+    td.other-month { background: #f5f5f5; }
+    td.weekend-day { background: #fafaf8; }
+    td.today-day   { border-top: 3px solid #f39c12; background: #fffbf0; }
+
+    .day-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: #999;
+      margin-bottom: 2px;
+    }
+    td:not(.other-month) .day-num { color: #222; }
+
+    .band {
+      border-radius: 3px;
+      padding: 2px 4px;
+      margin-bottom: 2px;
+      overflow: hidden;
+      line-height: 1.25;
+    }
+    .band-l1 { font-size: 9px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .band-l2 { font-size: 8px; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .legend {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 8px 16px;
+      border-top: 1px solid #ddd;
+      margin-top: 8px;
+    }
+    .leg-item {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { font-size: 10px; }
+      @page { size: A4 landscape; margin: 10mm; }
+      td { height: 75px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print">
+  📄 Page prête à imprimer — appuyez sur
+  <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+  <a href="{{ url_for('index', year=year, month=month) }}">← Retour calendrier</a>
+</div>
+
+<div style="padding: 0 12px 12px;">
+  <div class="print-header">
+    <div>
+      <div class="print-title">Réservations — {{ mois_nom }} {{ year }}</div>
+      <div class="print-subtitle">Villa Plaisance &amp; Studio Avignon</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      {% for source, col in couleurs.items() %}
+      <span class="leg-item" style="background:{{ col.bg }};color:{{ col.text }};">● {{ source }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>LUN</th><th>MAR</th><th>MER</th><th>JEU</th><th>VEN</th>
+        <th class="weekend-th">SAM</th><th class="weekend-th">DIM</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for week in weeks %}
+      <tr>
+        {% for day in week %}
+        {% set is_current = (day.month == month) %}
+        {% set is_today = (day == today()) %}
+        <td class="{% if not is_current %}other-month{% endif %} {% if day.weekday() >= 5 %}weekend-day{% endif %}">
+          <div class="day-num">{{ day.day }}</div>
+          {% if is_current and day in resa_by_day %}
+            {% for r in resa_by_day[day] %}
+            <div class="band" style="background:{{ r.couleur.bg }};color:#fff;">
+              <div class="band-l1">{{ r.code }} · {{ r.nom_client }}</div>
+              {% if r.provenance or r.commentaire %}
+              <div class="band-l2">
+                {% if r.provenance %}{{ r.provenance }}{% endif %}
+                {% if r.provenance and r.commentaire %} · {% endif %}
+                {% if r.commentaire %}{{ r.commentaire }}{% endif %}
+              </div>
+              {% endif %}
+            </div>
+            {% endfor %}
+          {% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

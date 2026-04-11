@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Vue annuelle {{ year }}{% endblock %}
+{% block page_title %}Vue annuelle{% endblock %}
+{% block page_subtitle %}{{ year }}{% endblock %}
+
+{% block extra_actions %}
+  <a href="{{ url_for('vue_annuelle', year=prev_year) }}" class="btn btn-secondary">‹ {{ prev_year }}</a>
+  <a href="{{ url_for('vue_annuelle', year=next_year) }}" class="btn btn-secondary">{{ next_year }} ›</a>
+{% endblock %}
+
+{% block content %}
+<div class="annee-mois-nav">
+  {% for md in mois_data %}
+  <a href="#mois-{{ md.month }}" class="mois-nav-item {% if md.month == today.month and year == today.year %}mois-nav-current{% endif %}">
+    {{ md.nom[:3] }}
+  </a>
+  {% endfor %}
+  <a href="{{ url_for('export_pdf_annee', annee=year) }}" class="btn btn-primary" style="margin-left:auto;">⬇️ PDF {{ year }}</a>
+</div>
+
+<div class="annee-grid">
+  {% for md in mois_data %}
+  <div class="mini-cal" id="mois-{{ md.month }}">
+    <div class="mini-cal-header">
+      <a href="{{ url_for('index', year=year, month=md.month) }}" class="mini-cal-title">
+        {{ md.nom }} {{ year }}
+      </a>
+      <a href="{{ url_for('print_mois', annee=year, mois=md.month) }}" class="mini-cal-print" target="_blank" title="Imprimer ce mois">📄</a>
+    </div>
+    <table class="mini-table">
+      <thead>
+        <tr>{% for j in ['L','M','M','J','V','S','D'] %}<th>{{ j }}</th>{% endfor %}</tr>
+      </thead>
+      <tbody>
+        {% for week in md.weeks %}
+        <tr>
+          {% for day in week %}
+          {% set is_current = (day.month == md.month) %}
+          {% set is_today = (day == today) %}
+          <td class="mini-day {% if not is_current %}mini-other{% endif %} {% if is_today %}mini-today{% endif %}">
+            <div class="mini-day-num">{{ day.day }}</div>
+            {% if is_current and day in md.resa_by_day %}
+              {% for r in md.resa_by_day[day] %}
+              <div class="mini-band" style="background:{{ r.couleur.bg }};"
+                   title="{{ r.code }} · {{ r.nom_client }}"></div>
+              {% endfor %}
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="legend" style="padding:16px 24px 24px;">
+  {% for source, col in couleurs.items() %}
+  <span class="legend-item" style="background:{{ col.bg }};color:{{ col.text }};">● {{ source }}</span>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Coller la barre des mois juste sous le header
+  const header = document.querySelector('.header');
+  const nav = document.querySelector('.annee-mois-nav');
+  if (header && nav) {
+    const setNavTop = () => { nav.style.top = header.offsetHeight + 'px'; };
+    setNavTop();
+    window.addEventListener('resize', setNavTop);
+  }
+
+  // Scroll vers le mois courant
+  const current = document.querySelector('.mois-nav-current');
+  if (current) {
+    const target = document.getElementById('mois-{{ today.month }}');
+    if (target) setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+  }
+});
+</script>
+{% endblock %}
