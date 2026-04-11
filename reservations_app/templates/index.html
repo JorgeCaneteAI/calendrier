@@ -47,7 +47,7 @@
                  onclick="window.location='{{ url_for('saisie', id=r.id) }}'"
                  title="{{ r.nom_client }}{% if r.provenance %} — {{ r.provenance }}{% endif %}">
               <div class="resa-line1 resa-desktop">{{ r.code }} · {{ r.nom_client }}</div>
-              <div class="resa-line1 resa-mobile">{{ prop_short }}{% if client_label %} · {{ client_label }}{% else %} · {{ r.source }}{% endif %}</div>
+              <div class="resa-line1 resa-mobile">{{ r.code }}<br>{{ r.source }}</div>
               {% if r.provenance or r.commentaire %}
               <div class="resa-line2 resa-desktop">
                 {% if r.provenance %}{{ r.provenance }}{% endif %}
