@@ -30,3 +30,14 @@ Réservations VP.app/
 reservations_app/lancer_app.sh
 "reservations_app/▶ Lancer Réservations.command"
 *.command
+
+# Claude Code metadata
+.claude/
+
+# Sécurité supplémentaire au cas où ces fichiers traînent à la racine
+/auth.json
+/reservations.db
+/Archive.zip
+/lancer_app.sh
+*.db
+*.zip
